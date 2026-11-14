@@ -1,0 +1,118 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Study Planner</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f5fb;color:#202744}
+header{background:#5146c8;color:white;padding:25px 7%}
+header h1{margin:0 0 8px}
+main{max-width:1000px;margin:30px auto;padding:0 18px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.card,.panel{background:white;padding:22px;border-radius:15px;box-shadow:0 4px 15px #20274410}
+.stats h2{font-size:30px;color:#5146c8;margin:8px 0}
+.panel{margin-top:22px}
+input,button{padding:12px;border-radius:8px;border:1px solid #ddd;font-size:15px}
+input{margin:5px;max-width:100%}
+button{background:#5146c8;color:white;border:0;cursor:pointer}
+button:hover{background:#39309c}
+.task{display:flex;justify-content:space-between;align-items:center;padding:13px 4px;border-bottom:1px solid #eee;gap:10px}
+.done{text-decoration:line-through;color:#999}
+.delete{background:#e74c3c;padding:8px}
+.progress{height:12px;background:#eee;border-radius:10px;overflow:hidden}
+#bar{height:100%;background:#5146c8;width:0%}
+@media(max-width:600px){.stats{grid-template-columns:1fr}.task{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<header>
+<h1>📚 Smart Study Planner</h1>
+<p>Plan smarter. Study better. Achieve more!</p>
+</header>
+<main>
+<div class="stats">
+<div class="card">Total Tasks<h2 id="total">0</h2></div>
+<div class="card">Completed<h2 id="completed">0</h2></div>
+<div class="card">Pending<h2 id="pending">0</h2></div>
+</div>
+
+<div class="panel">
+<h3>➕ Add a Study Task</h3>
+<input id="subject" placeholder="Subject name">
+<input id="task" placeholder="Task description">
+<input id="date" type="date">
+<button onclick="addTask()">Add Task</button>
+</div>
+
+<div class="panel">
+<h3>📅 My Study Tasks</h3>
+<div id="tasks"></div>
+</div>
+
+<div class="panel">
+<h3>📊 Study Progress</h3>
+<div class="progress"><div id="bar"></div></div>
+<p id="percent">0% completed</p>
+</div>
+</main>
+
+<script>
+let tasks=JSON.parse(localStorage.getItem("studyTasks")||"[]");
+
+function save(){
+localStorage.setItem("studyTasks",JSON.stringify(tasks));
+render();
+}
+
+function addTask(){
+let subject=document.getElementById("subject").value.trim();
+let task=document.getElementById("task").value.trim();
+let date=document.getElementById("date").value;
+if(!subject||!task){alert("Please enter subject and task!");return;}
+tasks.push({subject,task,date,done:false});
+document.getElementById("subject").value="";
+document.getElementById("task").value="";
+document.getElementById("date").value="";
+save();
+}
+
+function toggleTask(i){
+tasks[i].done=!tasks[i].done;
+save();
+}
+
+function deleteTask(i){
+tasks.splice(i,1);
+save();
+}
+
+function render(){
+let total=tasks.length;
+let completed=tasks.filter(t=>t.done).length;
+let percent=total?Math.round(completed/total*100):0;
+document.getElementById("total").textContent=total;
+document.getElementById("completed").textContent=completed;
+document.getElementById("pending").textContent=total-completed;
+document.getElementById("bar").style.width=percent+"%";
+document.getElementById("percent").textContent=percent+"% completed";
+document.getElementById("tasks").innerHTML=tasks.length?
+tasks.map((t,i)=>`
+<div class="task">
+<div>
+<strong class="${t.done?'done':''}">${t.subject}</strong><br>
+<span class="${t.done?'done':''}">${t.task}</span><br>
+<small>${t.date||"No deadline"}</small>
+</div>
+<div>
+<button onclick="toggleTask(${i})">${t.done?"Undo":"Done"}</button>
+<button class="delete" onclick="deleteTask(${i})">Delete</button>
+</div>
+</div>`).join(""):"No tasks yet. Add your first study task!";
+}
+render();
+</script>
+</body>
+</html>
